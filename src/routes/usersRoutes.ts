@@ -67,7 +67,6 @@ class UserRoutes {
                 );
             
                 res.status(200).send({ token: token });
-                console.log(token);
             }
         }
     }
@@ -109,9 +108,9 @@ class UserRoutes {
     } 
 
     routes() {
-        this.router.get('/', [authJwt.VerifyToken], this.getAllUsers);
+        this.router.get('/', this.getAllUsers);
         this.router.get('/:_id', [authJwt.VerifyTokenCustomer], this.getUserById);
-        this.router.get('/name/:userName', [authJwt.VerifyTokenCustomer], this.getUserByUserName);
+        this.router.get('/name/:userName', this.getUserByUserName);
         this.router.post('/', this.addUser); 
         this.router.post('/login', this.login); 
         this.router.put('/:_id', [authJwt.VerifyTokenCustomer], this.updateUser);
