@@ -6,6 +6,7 @@ import config from '../config';
 import User from '../models/User';
 
 
+
 class UserRoutes {
     public router: Router;
 
