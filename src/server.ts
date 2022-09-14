@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import compression from 'compression';
 import cors from 'cors';
 import dotenv from "dotenv";
+import bodyParser from'body-parser';
 
 import indexRoutes from './routes/indexRoutes';
 import userRoutes from './routes/usersRoutes';
@@ -41,12 +42,14 @@ class Server {
 
         //Middlewares
         this.app.use(morgan('dev')); //Allows to see by console the petitions that eventually arrive.
-        this.app.use(express.json()); //So that Express parses JSON as the body structure, as it doens't by default.
         this.app.use(express.urlencoded({extended:false}));
         this.app.use(helmet()); //Offers automatically security in front of some cracking attacks.
         this.app.use(compression()); //Allows to send the data back in a compressed format.
         this.app.use(cors()); //It automatically configures and leads with CORS issues and configurations.
-        //this.app.use(express.bodyParser({limit: '50mb'}))
+
+
+        this.app.use(express.json({limit: '25mb'}));
+        this.app.use(express.urlencoded({limit: '25mb',extended: true,}));
     }
 
     routes() {
