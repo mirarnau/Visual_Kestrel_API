@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import indexRoutes from './routes/indexRoutes';
 import userRoutes from './routes/usersRoutes';
 import adminRoutes from './routes/adminRoutes';
+import airspaceRoutes from './routes/airspaceRoutes';
 
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
@@ -45,12 +46,14 @@ class Server {
         this.app.use(helmet()); //Offers automatically security in front of some cracking attacks.
         this.app.use(compression()); //Allows to send the data back in a compressed format.
         this.app.use(cors()); //It automatically configures and leads with CORS issues and configurations.
+        //this.app.use(express.bodyParser({limit: '50mb'}))
     }
 
     routes() {
         this.app.use(indexRoutes);
         this.app.use('/api/users', userRoutes);
         this.app.use('/api/admins', adminRoutes);
+        this.app.use('/api/airspace', airspaceRoutes)
     }
 
     start() {

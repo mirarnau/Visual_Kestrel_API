@@ -5,9 +5,6 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import User from '../models/User';
 import Airspace from '../models/Airspace';
-import Line from '../models/Polygon';
-import Point from '../models/Point';
-import Polygon from '../models/Polygon';
 
 
 
@@ -50,7 +47,7 @@ class AirspaceRoutes {
 
 
         for (let i = 0 ; i < req.body.features.length; i++){
-            let feature = req.body.feature[i];
+            let feature = req.body.features[i];
             if (feature.geometry.type == "MultiPolygon"){
                 for (let i = 0; i < feature.geometry.coordinates.length; i ++){ //This length is the number of multipolygons of the feature
                     let currentMultiPolygon = feature.geometry.coordinates[i]; 
@@ -59,26 +56,26 @@ class AirspaceRoutes {
                             let listPointsPolygon : any[] = [];
                             for (let m = 0; m < currentPolygon.length; m++){ //Let's go through the list of coordinates
                                 let currentCoordinates = currentPolygon[m];
-                                let newPoint = new Point({
+                                let newPoint = {
                                     coordinates: {
                                         lat: currentCoordinates[1],
                                         long: currentCoordinates[0]
                                     }
-                                })
+                                }
                                 listPointsPolygon.push(newPoint);
                             }
                             let newPolygon;
                             if (k == 0){ //Meaning it's the first one --> Filled
-                                newPolygon = new Polygon({
+                                newPolygon = {
                                     transparent: 0,
                                     points: listPointsPolygon
-                                })
+                                }
                             }
                             else{
-                                newPolygon = new Polygon({
+                                newPolygon = {
                                     transparent: 1,
                                     points: listPointsPolygon
-                                })
+                                }
                             }
                             polygones_list.push(newPolygon);
                     }
@@ -92,18 +89,18 @@ class AirspaceRoutes {
                     let listPointsPolygon : any[] = [];
                         for (let m = 0; m < currentPolygon.length; m++){ //Let's go through the list of coordinates
                             let currentCoordinates = currentPolygon[m];
-                            let newPoint = new Point({
+                            let newPoint = {
                                 coordinates: {
                                     lat: currentCoordinates[1],
                                     long: currentCoordinates[0]
                                 }
-                            })
+                            }
                             listPointsPolygon.push(newPoint);
                         }
-                        let newPolygon = new Polygon({
+                        let newPolygon = {
                             transparent: 0,
                             points: listPointsPolygon
-                        })
+                        }
                         polygones_list.push(newPolygon);
 
                 }
@@ -135,6 +132,6 @@ class AirspaceRoutes {
 
     }
 }
-const usersRoutes = new AirspaceRoutes();
+const airspaceRoutes = new AirspaceRoutes();
 
-export default usersRoutes.router;
+export default airspaceRoutes.router;
