@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import config from '../config';
 import User from '../models/User';
 import Airspace from '../models/Airspace';
+import { getSystemErrorMap } from 'util';
 
 
 
@@ -26,15 +27,37 @@ class AirspaceRoutes {
         }
     }
 
-    public async getAirspaceByClass(req: Request, res: Response) : Promise<void> {
-        const airspaceFound = await Airspace.findOne({airspaceClass: req.body.airspaceClass});
-        if(airspaceFound == null) {
-            res.status(404).send("Airspace not found.");
+    public async getMultipleAirspaceByClass(req: Request, res: Response) : Promise<void> {
+        const body = req.body.airspaces;
+        const listAirspaces = body.map(airspace => airspace.name);
+        
+        const allAirspaces = await Airspace.find();
+        const filteredAirspaces = allAirspaces.filter((airspace) => {
+            if (listAirspaces.includes(airspace.airspaceClass)){
+                return airspace;
+            }
+        })
+        
+        /*
+        let listAirspacesFound: any[]= [];
+
+        for (let i = 0; listAirspaces.length; i++){
+            let name = listAirspaces[i].name;
+            console.log(name);
+            let airspaceFound = await Airspace.findOne({airspaceClass: name})
+            listAirspacesFound.push(airspaceFound);
+        }
+        */
+
+        if (filteredAirspaces.length < listAirspaces.length){
+            res.status(404).send("One or more airspaces not found")
         }
         else{
-            res.status(200).send(airspaceFound);
+            res.status(200).send(filteredAirspaces);
         }
     }
+
+    
   
     
     public async addAirspace(req: Request, res: Response) : Promise<void> {
@@ -127,7 +150,7 @@ class AirspaceRoutes {
 
     routes() {
         this.router.get('/', this.getAllAirspaces);
-        this.router.get('/name/:userName', this.getAirspaceByClass);
+        this.router.post('/multiple', this.getMultipleAirspaceByClass);
         this.router.post('/', this.addAirspace);  
 
     }

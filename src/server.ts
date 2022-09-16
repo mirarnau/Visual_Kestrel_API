@@ -11,6 +11,7 @@ import indexRoutes from './routes/indexRoutes';
 import userRoutes from './routes/usersRoutes';
 import adminRoutes from './routes/adminRoutes';
 import airspaceRoutes from './routes/airspaceRoutes';
+import airportsRoutes from './routes/airportRoutes';
 
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
@@ -57,6 +58,7 @@ class Server {
         this.app.use('/api/users', userRoutes);
         this.app.use('/api/admins', adminRoutes);
         this.app.use('/api/airspace', airspaceRoutes)
+        this.app.use('/api/airport', airportsRoutes)
     }
 
     start() {
