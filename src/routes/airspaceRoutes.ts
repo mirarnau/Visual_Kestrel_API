@@ -27,33 +27,17 @@ class AirspaceRoutes {
         }
     }
 
-    public async getMultipleAirspaceByClass(req: Request, res: Response) : Promise<void> {
-        const body = req.body.airspaces;
-        const listAirspaces = body.map(airspace => airspace.name);
-        
-        const allAirspaces = await Airspace.find();
-        const filteredAirspaces = allAirspaces.filter((airspace) => {
-            if (listAirspaces.includes(airspace.airspaceClass)){
-                return airspace;
-            }
-        })
-        
-        /*
-        let listAirspacesFound: any[]= [];
+    public async getSingleAirspaceByClass(req: Request, res: Response) : Promise<void> {
+        const selectedAirspace = req.params._class;
+        console.log(selectedAirspace);
 
-        for (let i = 0; listAirspaces.length; i++){
-            let name = listAirspaces[i].name;
-            console.log(name);
-            let airspaceFound = await Airspace.findOne({airspaceClass: name})
-            listAirspacesFound.push(airspaceFound);
-        }
-        */
+        const airspace = await Airspace.findOne({airspaceClass: selectedAirspace});
 
-        if (filteredAirspaces.length < listAirspaces.length){
-            res.status(404).send("One or more airspaces not found")
+        if (selectedAirspace == null){
+            res.status(404).send("Airspace not found")
         }
         else{
-            res.status(200).send(filteredAirspaces);
+            res.status(200).send(airspace);
         }
     }
 
@@ -150,7 +134,7 @@ class AirspaceRoutes {
 
     routes() {
         this.router.get('/', this.getAllAirspaces);
-        this.router.post('/multiple', this.getMultipleAirspaceByClass);
+        this.router.get('/:_class', this.getSingleAirspaceByClass);
         this.router.post('/', this.addAirspace);  
 
     }

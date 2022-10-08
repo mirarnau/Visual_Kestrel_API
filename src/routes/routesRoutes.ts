@@ -27,9 +27,9 @@ class RoutesRoutes {
         }
     }
 
-    public async getRouteByUserId(req: Request, res: Response) : Promise<void> { //It returns a void, but internally it's a promise.
-        const routesFound = await Route.findOne({user: req.params._id});
-        if (routesFound == null) {
+    public async getRoutesByUserId(req: Request, res: Response) : Promise<void> { //It returns a void, but internally it's a promise.
+        const routesFound = await Route.find({user: req.params._id});
+        if (routesFound.length == 0) {
             res.status(404).send("No routes found.")
         }
         else{
@@ -60,6 +60,7 @@ class RoutesRoutes {
                 listWayPoints: waypointList
             }
         )
+        await newRoute.save();
         res.status(200).send('Route added');
     }
 
