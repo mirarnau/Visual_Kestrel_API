@@ -6,6 +6,7 @@ import config from '../config';
 import Airport from '../models/Airport';
 import Route from '../models/Route';
 import { type } from 'os';
+import { Console } from 'console';
 
 
 
@@ -77,7 +78,7 @@ class RoutesRoutes {
 
     routes() {
         this.router.get('/', this.getAllRoutes);
-        this.router.get('/:_id', this.getAllRoutes);
+        this.router.get('/:_id', this.getRoutesByUserId);
         this.router.post('/', this.addRoute); 
         this.router.delete('/:_id', [authJwt.VerifyTokenCustomer], this.deleteRoute);
 
