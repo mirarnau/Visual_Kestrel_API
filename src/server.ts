@@ -14,6 +14,7 @@ import airspaceRoutes from './routes/airspaceRoutes';
 import airportsRoutes from './routes/airportRoutes';
 import routesRotues from './routes/routesRoutes';
 import weatherRoutes from './routes/weatherRoutes';
+import airplanesRoutes from './routes/airplanesRoute';
 
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
@@ -63,6 +64,7 @@ class Server {
         this.app.use('/api/airport', airportsRoutes)
         this.app.use('/api/routes', routesRotues)
         this.app.use('/api/weather', weatherRoutes)
+        this.app.use('/api/airplanes', airplanesRoutes)
     }
 
     start() {
