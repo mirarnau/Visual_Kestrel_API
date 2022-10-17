@@ -2,8 +2,8 @@ import mongoose, { Mongoose } from 'mongoose';
 import {Schema, model} from 'mongoose';
 
 const WeatherReportSchema = new Schema({
-    lat: {type: Number, required:true},
-    long: {type: Number, required:true},
+    lat: {type: Number},
+    long: {type: Number},
     timezone: {type: String},
     current :{
         dt: {type: Number},
