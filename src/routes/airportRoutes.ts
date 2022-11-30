@@ -28,24 +28,31 @@ class AirportRoutes {
     
     public async addAirports(req: Request, res: Response) : Promise<void>  {
         let counter = 0;
-        for (let i = 0; i < req.body.length; i++){
-            const currentAirport = req.body[i];
-            if (currentAirport.country == 'Spain'){
+
+        for (var key in req.body){
+            var currentAirport = req.body[key];
+            console.log(currentAirport);
+            if (currentAirport.country == 'ES'){
                 const newAirsport = new Airport(
                     {
                         name: currentAirport.name,
                         city: currentAirport.city,
                         country: currentAirport.country,
-                        iata_code: currentAirport.iata_code,
+                        community: currentAirport.state,
+                        timezone: currentAirport.tz,
+                        elevation: currentAirport.elevation,
+                        iata_code: currentAirport.iata,
+                        icao_code: currentAirport.icao,
                         coordinates: {
-                            lat: currentAirport._geoloc.lat,
-                            long: currentAirport._geoloc.lng,
+                            lat: currentAirport.lat,
+                            long: currentAirport.lon,
                         }
                     }
                 )   
                 counter++;
                 await newAirsport.save();
             }
+
         }
 
         res.status(200).send(counter.toString() + ' airports have been added');

@@ -36,8 +36,8 @@ class AirplaneRoutes {
     public async addAirplane(req: Request, res: Response) : Promise<void>  {
         let body = req.body;
         let performance_takeof_data = {
-            conditions: body.performance_climb.conditions,
-            mtow: body.performance_climb.mtow,
+            conditions: body.performance_takeof.conditions,
+            mtow: body.performance_takeof.mtow,
             ground_roll_takeoff: body.performance_takeof.ground_roll_takeoff,
             total_distance_50ft: body.performance_takeof.total_distance_50ft,
             takeof_ias: body.performance_takeof.takeof_ias
@@ -49,6 +49,7 @@ class AirplaneRoutes {
                     pressure_altitude: body.performance_climb.data[i].pressure_altitude,
                     temp_celsius: body.performance_climb.data[i].temp_celsius,
                     climb_speed_kias: body.performance_climb.data[i].climb_speed_kias,
+                    rate_climb_fpm: body.performance_climb.data[i].rate_climb_fpm,
                     time_minutes: body.performance_climb.data[i].time_minutes,
                     fuel_used_gallons: body.performance_climb.data[i].fuel_used_gallons,
                     distance_nm: body.performance_climb.data[i].distance_nm
@@ -114,6 +115,7 @@ class AirplaneRoutes {
         await newAirplanes.save();
         res.status(200).send("Airplane " + body.model + " created.")
     }
+    
 
 
     routes() {

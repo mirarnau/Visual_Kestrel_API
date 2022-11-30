@@ -8,6 +8,7 @@ const FlightRouteSchema = new Schema({
         {
             pointName: {type: String},
             comments: {type: String},
+            distance_previous: {type: String},
             coordinates: 
             {
                 lat: {type: Number},

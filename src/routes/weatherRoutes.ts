@@ -62,14 +62,24 @@ class WeatherRoutes {
             resp.on("end", () => {
                 try {
                     let json = JSON.parse(body);
-                    let dailyForecast = {};
-                    for (var i = 0; i < json.daily.length; i++){
-                        if (json.daily[i].dt == req.body.date){
-                            dailyForecast = json.daily[i];
+                    console.log(req.body);
+
+                    let wantedForecast = {};
+                    let wantedTimeStamp = req.body.date;
+                    let minDifference = Infinity;
+
+                    let hourlyDailyForecast = json.hourly.concat(json.daily);
+                    
+                    for (let i = 0; i < hourlyDailyForecast.length; i++){
+                        let difference = Math.abs(hourlyDailyForecast[i].dt - wantedTimeStamp);
+                        if (difference < minDifference){
+                            minDifference = difference;
+                            wantedForecast = hourlyDailyForecast[i];
                         }
                     }
-
-                    res.status(200).send(dailyForecast);
+                    
+                    
+                    res.status(200).send(wantedForecast);
 
                     
                 } catch (error) {

@@ -67,7 +67,7 @@ class UserRoutes {
                     }
                 );
             
-                res.status(200).send({ token: token, idUser: userFound._id});
+                res.status(200).send({ token: token, user: userFound});
             }
         }
     }
