@@ -23,7 +23,9 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.2.4",
     "morgan": "^1.10.0",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "togeojson": "^0.16.0",
+    "xml2js": "^0.6.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

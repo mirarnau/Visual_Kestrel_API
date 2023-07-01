@@ -5,7 +5,6 @@ import mongoose from 'mongoose';
 import compression from 'compression';
 import cors from 'cors';
 import dotenv from "dotenv";
-import bodyParser from'body-parser';
 
 import indexRoutes from './routes/indexRoutes';
 import userRoutes from './routes/usersRoutes';
@@ -23,9 +22,6 @@ dotenv.config({ path: ".env.secret" });
 class Server {
     public app: express.Application;
 
-    
-
-    //The contructor will be the first code that is executed when an instance of the class is declared.
     constructor(){
         this.app = express();
         this.config();
@@ -33,7 +29,6 @@ class Server {
     }
 
     config() {
-        //MongoDB settings
         let DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/VISUAL-KESTREL';
 
         DB_URL = DB_URL.replace("user", process.env.DB_USER!);

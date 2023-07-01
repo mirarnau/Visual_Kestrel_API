@@ -10,6 +10,7 @@ import { Console, time } from 'console';
 import https from 'https';
 import fetch from 'node-fetch';
 import { TextDecoder } from 'util';
+import Airspace from '../models/Airspace';
 
 
 
@@ -55,25 +56,151 @@ class RoutesRoutes {
 
         var listSections = await processSectionsRoute(points);
         var listSectionsCorrectedFl = firstCorrection(listSections);
-        res.status(200).send(JSON.stringify(listSectionsCorrectedFl));
 
+        // HERE IS WHERE I MUST CALL THE AIRSPACE EVALUATION METHOD TO VALIDATE THE ROUTE 
+    
+        const airspaceClassA = await Airspace.findOne({airspaceClass: "CLASS A"});
+        const airspaceProhibited = await Airspace.findOne({airspaceClass: "PROHIBITED"});
+        const airspaceRestricted = await Airspace.findOne({airspaceClass: "RESTRICTED"});
+
+        var routePointsCoordinates : any[] = [];
+        for (let u = 0; u < listSectionsCorrectedFl.length; u++){
+            var currentSection = listSectionsCorrectedFl[u];
+            for (let p = 0; p < currentSection.length; p++){
+                var currentPointSection = currentSection[p];
+                routePointsCoordinates.push(currentPointSection);
+            }
+        }
+
+        var intersectionVectorClassA = await isAnyPointInsidePolygons(routePointsCoordinates, airspaceClassA?.polygones, "CLASS A");
+        var intersectionVectorProhibited = await isAnyPointInsidePolygons(routePointsCoordinates, airspaceProhibited?.polygones, "PROHIBITED");
+        var intersectionVectorRestricted = await isAnyPointInsidePolygons(routePointsCoordinates, airspaceRestricted?.polygones, "RESTRICTED");
+
+        var listsResponse = [listSectionsCorrectedFl, intersectionVectorClassA, intersectionVectorProhibited, intersectionVectorRestricted];
+
+        res.status(200).send(listsResponse);
+
+        function delay(ms: number) {
+            return new Promise( resolve => setTimeout(resolve, ms) );
+        }
+
+
+        async function isAnyPointInsidePolygons(route, listPolygonesAirspaces, name) {
+            var intersectingPoints : any[] = []; // 0 when not intersectiong, the airspace boundaries when true
+            for (let i = 0; i < route.length; i++) {
+                var currentPointRoute = route[i];
+                var lowestBase = Infinity;
+                var highestTop = 0;
+                var inside = false;
+                for (let y = 0; y < listPolygonesAirspaces.length; y++) {
+                    var currentPolygonePoints = listPolygonesAirspaces[y].points;
+                    if (isPointInsidePolygon(currentPointRoute, currentPolygonePoints)) {
+                        console.log("TRUE for " + name);
+                        inside = true;
+                        var polygonBase = await parseAltiudeData(currentPolygonePoints[0].base);
+                        var polygonTop = await parseAltiudeData(currentPolygonePoints[0].top);
+                        if(polygonBase < lowestBase){
+                            lowestBase = polygonBase;
+                        }
+                        if (polygonTop > highestTop){
+                            highestTop = polygonTop;
+                        }  
+                    }
+                }
+                if (inside){
+                    var airspaceBoundariesData = {
+                        base: lowestBase,
+                        top: highestTop
+                    }
+                    console.log(airspaceBoundariesData);
+                    intersectingPoints.push(airspaceBoundariesData);
+                }
+                else{
+                    var airspaceBoundariesData = {
+                        base: 0,
+                        top: 0
+                    }
+                    intersectingPoints.push(airspaceBoundariesData);
+                }
+            }
+            return intersectingPoints;
+          }
+
+        function isPointInsidePolygon(point, listPointsPolygone): boolean {
+            let isInside = false;
+            const [pointLat, pointLong] = [point.lat, point.long];
+          
+            for (let i = 0, j = listPointsPolygone.length - 1; i < listPointsPolygone.length; j = i++) {
+              const [vertiLat, vertiLong] = [listPointsPolygone[i].coordinates.lat, listPointsPolygone[i].coordinates.long];
+              const [vertjLat, vertjLong] = [listPointsPolygone[j].coordinates.lat, listPointsPolygone[j].coordinates.long];
+          
+              if (
+                ((vertiLong > pointLong) !== (vertjLong > pointLong)) &&
+                (pointLat < ((vertjLat - vertiLat) * (pointLong - vertiLong)) / (vertjLong - vertiLong) + vertiLat)
+              ) {
+                // Before switching to true, here carry out the vertical check. An extra AND is needed
+                isInside = !isInside;
+              }
+            }
+          
+            return isInside;
+          }
+
+        async function parseAltiudeData(altitudeData: string) {
+            var splittedData = altitudeData.split(" ");
+            
+            if (splittedData.length == 1){
+                if (splittedData[0] == "GND") {
+                    // CASE 4 Format -> GND
+                    // Just check the upper boundary, because it's impossible to fly under the ground.
+                    console.log("CASE 4 Output -> 0");
+                    return 0;
+                }
+                else{
+                    // CASE 1 Format -> FL123
+                    var flightLevel = splittedData[0].split("FL")[1];
+                    console.log(flightLevel);
+                    console.log("CASE 1 Output -> " + parseFloat(flightLevel) * 100);
+                    return parseFloat(flightLevel) * 100;
+                }
+            }
+            else{
+                var flightLevelFeets = splittedData[0];
+                var reference = splittedData[2];
+
+                if ((reference == "AMSL") || (reference == "MSL")){
+                    // CASE 2 Format -> 1234 FT AMSL
+                    console.log("CASE 2 Output -> " + parseFloat(flightLevelFeets));
+                    return parseFloat(flightLevelFeets);
+                }
+                else{
+                    // CASE 3 Format -> 1234 FT AGL
+                    // Here API request, no other option.
+                    console.log("CASE 3 Output -> " + parseFloat(flightLevelFeets));
+                    return parseFloat(flightLevelFeets);
+                }
+            }
+
+        }
         
         async function processSectionsRoute(listPoints)  {
             var listSectionsWithElevation : any [] = [];
             for (let i = 0; i < (listPoints.length - 1); i++){
                 var currentSection = interpolatePoints(listPoints[i].lat, listPoints[i].long, listPoints[i+1].lat, listPoints[i+1].long);
                 var sectionWithElevation = await requestElevation(currentSection);
+                await delay(1300); // 1 second delay to comply with less than 1 req / sec of the free Open Topo Data API
                 listSectionsWithElevation.push(sectionWithElevation);
             }
             return listSectionsWithElevation;
         } 
 
+
         function interpolatePoints(latOrigin, longOrigin, latDest, longDest){
             var delta_lat = latDest - latOrigin;
             var delta_long = longDest - longOrigin;
             var interpolatedSection: any[] = [];
-            //80 points/section interpolation
-            for (let t = 0; t <= 1; t = t + 0.025){
+            //20 points/section interpolation (API accepts a max of 100 points)
+            for (let t = 0; t <= 1; t = t + 0.05){
                 var newPoint = {
                     lat: latOrigin + (t * delta_lat),
                     long: longOrigin + (t * delta_long)
@@ -85,8 +212,15 @@ class RoutesRoutes {
         
 
         async function requestElevation (section){
-            let url = "https://api.open-elevation.com/api/v1/lookup"
+            //let url = "https://api.open-elevation.com/api/v1/lookup"
+            let url = "https://api.opentopodata.org/v1/eudem25m?locations="
             var pointsSectionWithElevation: any[] = [];
+
+            for (let i = 0; i < section.length; i++){
+                url = url + section[i].lat + "," + section[i].long + "|";
+            }
+
+            /*
             var listLocations: any [] = [];
             for (let i = 0; i < section.length; i++){
                 var location = {
@@ -96,22 +230,24 @@ class RoutesRoutes {
                 listLocations.push(location);
             }
             var bodyJson =   {"locations": listLocations};
+            */
 
             const response = await fetch(url, {
-                method: 'post',
-                body: JSON.stringify(bodyJson),
+                method: 'get',
+                //body: JSON.stringify(bodyJson),
                 headers: {'Accept': 'application/json', 'Content-Type':' application/json'} });
 
             const data = await response.json();
 
             if (data !== null) {
+                console.log(data.error);
 
                 for (let i = 0; i < data.results.length; i++){
                     var pointWithAltitude = {
-                        lat: data.results[i].latitude,
-                        long: data.results[i].longitude,
+                        lat: data.results[i].location.lat,
+                        long: data.results[i].location.lng,
                         elevation: data.results[i].elevation,
-                        flight_level: decideFlightLevel(data.results[i].elevation, computeBearing(data.results[i].latitude, data.results[i].longitude, data.results[data.results.length - 1].latitude, data.results[data.results.length - 1].longitude ))
+                        flight_level: decideFlightLevel(data.results[i].elevation, computeBearing(data.results[i].location.lat, data.results[i].location.lng, data.results[data.results.length - 1].location.lat, data.results[data.results.length - 1].location.lng ))
                     }
                     pointsSectionWithElevation.push(pointWithAltitude);
                 }
@@ -729,6 +865,45 @@ class RoutesRoutes {
         res.status(200).send(responseJson);
     }
 
+
+
+    public async getWeightAndBalanceCessna172(req: Request, res: Response) : Promise<void> { 
+        let cessnaEmptyWeigth = 625.50387823; //Kg, which is 1397 lbs
+        let fuelWeigth = 56; // Kg
+        let pilotWeigt = req.body.pilotWeight;
+        let copilotWeigth = req.body.copilotWeight;
+        let passengersWeight = req.body.passengersWeigth;
+        let baggageArea1 = req.body.baggageArea1;
+        let baggageArea2 = req.body.baggageArea2;
+
+        let fullWeight = (cessnaEmptyWeigth + fuelWeigth + pilotWeigt + copilotWeigth + passengersWeight + baggageArea1 + baggageArea2) * 2.20462262; // lbs
+
+        let momentum = (1.0062173322 * cessnaEmptyWeigth) 
+                        + 1.2170833342 * fuelWeigth
+                        + 0.9412941169 * (pilotWeigt + copilotWeigth)
+                        + 1.8527058831 * passengersWeight
+                        + 2.4166990299 * (baggageArea1 + baggageArea2);
+
+        let momentumGraphic = (momentum * 2.20462262 * 39.3700787) / 1000 //lbs * inches / 1000
+
+        var responseJson = {
+            fullWeight: fullWeight,
+            momentum: momentumGraphic,
+        }
+        console.log(responseJson);
+        res.status(200).send(responseJson);
+    }
+
+    public async updateRoute(req: Request, res: Response) : Promise<void> {
+        const routeToUpdate = await Route.findByIdAndUpdate (req.params._id, req.body);
+        if(routeToUpdate == null){
+            res.status(404).send("Route not found.");
+        }
+        else{
+            res.status(201).send("Route updated.");
+        }
+    }
+
     routes() {
         this.router.get('/', this.getAllRoutes);
         this.router.get('/:_id', this.getRoutesByUserId);
@@ -736,7 +911,9 @@ class RoutesRoutes {
         this.router.post('/altitudes', this.getRouteAltitudes); 
         this.router.post('/report/:idAirplane', this.getFullReportRoute); 
         this.router.post('/analytics', this.getAnalyticsVisibility);
-        this.router.delete('/:_id', [authJwt.VerifyTokenCustomer], this.deleteRoute);
+        this.router.post('/balance/Cessna172', this.getWeightAndBalanceCessna172);
+        this.router.post('/:_id', this.updateRoute);
+        this.router.delete('/:_id', this.deleteRoute);
 
     }
 }

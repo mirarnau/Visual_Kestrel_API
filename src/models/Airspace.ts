@@ -6,6 +6,10 @@ const AirspaceSchema = new Schema({
     polygones: [{
         transparent: {type: Number}, // 0:filled, 1:not_filled
         points: [{
+            name: {type: String},
+            airspaceCategory: {type: String},
+            base: {type: String},
+            top: {type: String},
             coordinates: {
                 lat: {type: Number},
                 long: {type: Number},
@@ -14,6 +18,9 @@ const AirspaceSchema = new Schema({
     }],
     points: [{
         name: {type: String},
+        airspaceCategory: {type: String},
+        base: {type: String},
+        top: {type: String},
         coordinates: {
             lat: {type: Number},
             long: {type: Number},
