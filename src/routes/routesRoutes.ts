@@ -912,7 +912,7 @@ class RoutesRoutes {
         this.router.post('/report/:idAirplane', this.getFullReportRoute); 
         this.router.post('/analytics', this.getAnalyticsVisibility);
         this.router.post('/balance/Cessna172', this.getWeightAndBalanceCessna172);
-        this.router.post('/:_id', this.updateRoute);
+        this.router.put('/:_id', this.updateRoute);
         this.router.delete('/:_id', this.deleteRoute);
 
     }

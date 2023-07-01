@@ -114,7 +114,7 @@ class UserRoutes {
         this.router.get('/name/:userName', this.getUserByUserName);
         this.router.post('/', this.addUser); 
         this.router.post('/login', this.login); 
-        this.router.put('/:_id', [authJwt.VerifyTokenCustomer], this.updateUser);
+        this.router.put('/:_id', this.updateUser);
         this.router.delete('/:_id', [authJwt.VerifyTokenCustomer], this.deleteUser);
 
     }
