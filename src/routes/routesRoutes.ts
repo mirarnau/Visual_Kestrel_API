@@ -366,6 +366,8 @@ class RoutesRoutes {
         listReports.push(getApproachReport(airplaneUsed));
         listReports.push(getLandingReport(airplaneUsed));
 
+        console.log(listReports);
+
         res.status(200).send(listReports);
 
         function computeBearing(latOringin, longOrigin, latDest, longDest){
@@ -470,13 +472,15 @@ class RoutesRoutes {
             var ktas = airplane.performance_cruise.data[indexToEvaluate].ktas;
             var distanceCruiseKm = getDistanceFromLatLonInKm(pointOrigin.lat, pointOrigin.long, pointDestination.lat, pointDestination.long);
             var timeCruiseSeconds = (distanceCruiseKm * 1000) / (ktas * 0.514444444) //seconds
-            var bearing = computeBearing(pointOrigin.lat, pointOrigin.long, pointDestination.lat, pointDestination.long)
+            var bearing = computeBearing(pointOrigin.lat, pointOrigin.long, pointDestination.lat, pointDestination.long);
+            var gph = airplane.performance_cruise.data[indexToEvaluate].gph;
             var responseCruise = {
                 report_type: 'Cruise',
                 conditions: conditions,
                 altitude_cruise_ft: altitude,
                 bph_percentage: bphPercentage,
                 cruise_ktas: ktas,
+                gph: gph,
                 distance_cruise_km: distanceCruiseKm,
                 time: timeCruiseSeconds,
                 bearing: bearing

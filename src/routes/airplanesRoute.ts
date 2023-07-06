@@ -63,7 +63,7 @@ class AirplaneRoutes {
                     pressure_altitude: body.performance_cruise.data[i].pressure_altitude,
                     bhp_percentage: body.performance_cruise.data[i].bhp_percentage,
                     ktas: body.performance_cruise.data[i].ktas,
-                    ghp: body.performance_cruise.data[i].ghp
+                    gph: body.performance_cruise.data[i].gph
                 }
             )
         }
